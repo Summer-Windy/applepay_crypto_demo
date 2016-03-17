@@ -42,10 +42,12 @@ import java.util.Map;
 
 /**
  * Example implementation of Apple Pay encryption
- *
+ * 实现苹果加密的例子
  * WARNINGS:
  *  - You should validate Apple's signature -- this code does not do that currently
  *  - You should use an HSM for merchant EC private keys -- this example assumes an exported .p12 with a password of 'test'
+ *  -自己验证苹果签名
+ *  -自己存储私钥  例子假设是.p12文件的密码是test
  */
 public class Main {
   // Apple Pay uses an 0s for the IV
@@ -74,10 +76,10 @@ public class Main {
     // read json payment token
     Map paymentToken = new Gson().fromJson(new FileReader(paymentTokenFilename), Map.class);
 
-    // data is the ciphertext
+    // data is the ciphertext 密文
     byte[] data = Base64.decode((String) paymentToken.get("data"));
 
-    // read the ephemeral public key. it's a PEM file without header/footer -- add it back to make our lives easy
+    // read the ephemeral（瞬间的） public key. it's a PEM file without header/footer -- add it back to make our lives easy
     Map header = (Map) paymentToken.get("header");
     String ephemeralPubKeyStr = "-----BEGIN PUBLIC KEY-----\n" + header.get("ephemeralPublicKey") + "\n-----END PUBLIC KEY-----";
     PEMReader pemReaderPublic = new PEMReader(new StringReader(ephemeralPubKeyStr));
@@ -92,7 +94,7 @@ public class Main {
     // export it from e.g. mac's keychain
     ECPrivateKey merchantPrivateKey = loadPrivateKey(pkcs12Filename);
 
-    // now we have all the data we need -- decrypt per Apple Pay spec
+    // now we have all the data we need -- decrypt（解密） per Apple Pay spec 
     final byte[] plaintext = decrypt(data, merchantPrivateKey, ephemeralPublicKey, merchantIdentifier);
     System.out.println(new String(plaintext, "ASCII"));
   }
